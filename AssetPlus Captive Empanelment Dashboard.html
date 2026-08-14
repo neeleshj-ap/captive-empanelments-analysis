@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Captive Empanelment Analysis — AssetPlus</title>
+<style>
+  :root {
+    --bg:#0A0A0C; --card:#131316; --border:rgba(255,255,255,0.08); --text:#F3F3F4; --sub:#9C9CA6; --faint:#6C6C76;
+    --orange:#FF5A1F; --amber:#FFB020; --teal:#2FD1B3; --blue:#5B8CFF; --violet:#B084F5; --track:rgba(255,255,255,0.07);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0 0 70px 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--orange); background: rgba(255,90,31,0.12); border: 1px solid rgba(255,90,31,0.3);
+    padding: 5px 12px; border-radius: 100px; margin-bottom: 14px;
+  }
+  header {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,90,31,0.16), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(91,140,255,0.12), transparent 40%),
+      linear-gradient(180deg, #000000 0%, #0A0A0C 100%);
+    padding: 56px 0 44px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0 0 10px 0; font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+  header h1 span { color: var(--orange); }
+  header p.desc { margin: 0; color: var(--sub); font-size: 14px; max-width: 620px; line-height: 1.5; }
+  .kpis { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 20px; min-width: 155px; flex: 1;
+  }
+  .kpi .num { font-size: 26px; font-weight: 800; color: var(--text); }
+  .kpi .lbl { font-size: 10.5px; color: var(--sub); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+  section.card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px 30px; margin-top: 22px;
+  }
+  section.card h2 { margin: 0 0 4px 0; color: var(--text); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  section.card p.sub { margin: 0 0 20px 0; color: var(--sub); font-size: 12.5px; }
+  .barrow { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .barlabel { width: 300px; font-size: 12.5px; color: var(--text); flex-shrink: 0; }
+  .bartrack { flex: 1; background: var(--track); border-radius: 6px; height: 14px; overflow: hidden; }
+  .barfill { height: 100%; border-radius: 6px; }
+  .barval { width: 95px; font-size: 12px; color: var(--sub); text-align: right; flex-shrink: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+  th {
+    text-align: left; background: rgba(255,255,255,0.04); color: var(--orange);
+    padding: 10px 12px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+  td.num { text-align: right; color: var(--sub); }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } .barlabel { width: 170px; } }
+  .donutwrap { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+  .legend { font-size: 12.5px; color: var(--text); }
+  .legit { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .mombarwrap { display: flex; align-items: flex-end; gap: 7px; height: 190px; padding: 10px 0 0 0; overflow-x: auto; }
+  .mombar { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 48px; }
+  .momcols { display: flex; align-items: flex-end; height: 150px; gap: 3px; }
+  .momcol { width: 17px; height: 150px; display: flex; align-items: flex-end; background: var(--track); border-radius: 4px 4px 0 0; }
+  .momfill { width: 100%; border-radius: 4px 4px 0 0; }
+  .momfill.created { background: var(--blue); }
+  .momfill.emp { background: var(--orange); }
+  .momlabel { font-size: 9.5px; color: var(--sub); margin-top: 6px; }
+  .momlegend { display: flex; gap: 20px; font-size: 12px; margin-bottom: 10px; color: var(--text); }
+  .note { font-size: 11.5px; color: var(--faint); margin-top: 14px; }
+  .footer { text-align: center; color: var(--faint); font-size: 11.5px; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .footer a { color: var(--orange); text-decoration: none; }
+
+  /* funnel */
+  .funnelrow { display: flex; align-items: center; gap: 16px; margin: 4px 0; }
+  .funnelbarwrap { flex: 1; }
+  .funnelbar {
+    background: linear-gradient(90deg, var(--orange), #FF8A50);
+    border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
+    min-width: 260px; transition: width .3s;
+  }
+  .funnellabel { font-weight: 700; font-size: 14px; color: #14100C; }
+  .funnelval { font-weight: 800; font-size: 16px; color: #14100C; }
+  .funnelpct { width: 110px; font-size: 12px; color: var(--sub); text-align: right; flex-shrink: 0; }
+  .funnelstep { display: flex; align-items: center; gap: 8px; margin: 6px 0 6px 22px; font-size: 11.5px; color: var(--sub); }
+  .steparrow { color: var(--orange); font-weight: 700; }
+  .stepconv { color: var(--teal); font-weight: 600; }
+  .stepdrop { color: var(--faint); }
+  .funnelnote {
+    margin-top: 18px; padding: 12px 16px; background: rgba(255,90,31,0.08);
+    border: 1px solid rgba(255,90,31,0.25); border-radius: 10px; font-size: 12px; color: var(--sub);
+  }
+  .funnelnote b { color: var(--text); }
+
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 9px; border-radius: 100px; background: rgba(255,255,255,0.08); color: var(--sub); margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <span class="eyebrow">● Captive Empanelment</span>
+    <h1>Converted Leads → <span>Empanelment</span> Analysis</h1>
+    <p class="desc">Full-funnel view of every converted lead / deal that reached empanelment · Source: Zoho CRM export (all fields) · Static snapshot, not a live feed</p>
+    <div class="kpis">
+      <div class="kpi"><div class="num">314</div><div class="lbl">Total Records</div></div>
+      <div class="kpi"><div class="num">51</div><div class="lbl">Reached Super Starter</div></div>
+      <div class="kpi"><div class="num">Apr 2025–Jul 2026</div><div class="lbl">Lead Created Range</div></div>
+      <div class="kpi"><div class="num">14.9</div><div class="lbl">Span (Months)</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="card">
+    <span class="eyebrow">Conversion Funnel</span>
+    <h2>Empanelment Journey — Cumulative Reach</h2>
+    <p class="sub">Empanelled → Activated → Quick Starter → Super Starter is a progressive funnel, not four separate buckets. Every record is Empanelled; each later stage is a subset of the one before it, so counts here show how many made it <em>at least</em> that far.</p>
+    
+        
+        <div class="funnelrow">
+          <div class="funnelbarwrap">
+            <div class="funnelbar" style="width:100.0%;">
+              <span class="funnellabel">Empanelled</span>
+              <span class="funnelval">314</span>
+            </div>
+          </div>
+          <div class="funnelpct">100.0% of total</div>
+        </div>
+
+        <div class="funnelstep">
+                <span class="steparrow">&#8595;</span>
+                <span class="stepconv">62.7% moved forward</span>
+                <span class="stepdrop">(37.3% dropped off here)</span>
+              </div>
+        <div class="funnelrow">
+          <div class="funnelbarwrap">
+            <div class="funnelbar" style="width:73.9%;">
+              <span class="funnellabel">Activated</span>
+              <span class="funnelval">197</span>
+            </div>
+          </div>
+          <div class="funnelpct">62.7% of total</div>
+        </div>
+
+        <div class="funnelstep">
+                <span class="steparrow">&#8595;</span>
+                <span class="stepconv">99.5% moved forward</span>
+                <span class="stepdrop">(0.5% dropped off here)</span>
+              </div>
+        <div class="funnelrow">
+          <div class="funnelbarwrap">
+            <div class="funnelbar" style="width:73.7%;">
+              <span class="funnellabel">Quick Starter</span>
+              <span class="funnelval">196</span>
+            </div>
+          </div>
+          <div class="funnelpct">62.4% of total</div>
+        </div>
+
+        <div class="funnelstep">
+                <span class="steparrow">&#8595;</span>
+                <span class="stepconv">26.0% moved forward</span>
+                <span class="stepdrop">(74.0% dropped off here)</span>
+              </div>
+        <div class="funnelrow">
+          <div class="funnelbarwrap">
+            <div class="funnelbar" style="width:41.4%;">
+              <span class="funnellabel">Super Starter</span>
+              <span class="funnelval">51</span>
+            </div>
+          </div>
+          <div class="funnelpct">16.2% of total</div>
+        </div>
+    <div class="funnelnote">
+      <b>Biggest drop-off:</b> Quick Starter → Super Starter, where 145 of 196 records (74.0%) did not progress further.
+      Empanelled → Activated also loses 117 records (37.3%), while Activated → Quick Starter is nearly lossless (196/197 = 99.5%).
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="eyebrow">Timeframe</span>
+    <h2>Month-on-Month</h2>
+    <p class="sub">Leads Created (11 Apr 2025 → 10 Jul 2026) vs. Empanelments achieved (16 Apr 2025 → 21 Jul 2026)</p>
+    <div class="momlegend">
+      <div class="legit"><span class="dot" style="background:#5B8CFF"></span>Leads Created</div>
+      <div class="legit"><span class="dot" style="background:#FF5A1F"></span>Empanelments</div>
+    </div>
+    <div class="mombarwrap">
+      
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 6"><div class="momfill created" style="height:17%"></div></div>
+            <div class="momcol" title="Empanelments: 2"><div class="momfill emp" style="height:6%"></div></div>
+          </div>
+          <div class="momlabel">Apr'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 12"><div class="momfill created" style="height:34%"></div></div>
+            <div class="momcol" title="Empanelments: 2"><div class="momfill emp" style="height:6%"></div></div>
+          </div>
+          <div class="momlabel">May'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 13"><div class="momfill created" style="height:37%"></div></div>
+            <div class="momcol" title="Empanelments: 7"><div class="momfill emp" style="height:20%"></div></div>
+          </div>
+          <div class="momlabel">Jun'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 32"><div class="momfill created" style="height:91%"></div></div>
+            <div class="momcol" title="Empanelments: 8"><div class="momfill emp" style="height:23%"></div></div>
+          </div>
+          <div class="momlabel">Jul'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 25"><div class="momfill created" style="height:71%"></div></div>
+            <div class="momcol" title="Empanelments: 17"><div class="momfill emp" style="height:49%"></div></div>
+          </div>
+          <div class="momlabel">Aug'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 35"><div class="momfill created" style="height:100%"></div></div>
+            <div class="momcol" title="Empanelments: 19"><div class="momfill emp" style="height:54%"></div></div>
+          </div>
+          <div class="momlabel">Sep'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 16"><div class="momfill created" style="height:46%"></div></div>
+            <div class="momcol" title="Empanelments: 22"><div class="momfill emp" style="height:63%"></div></div>
+          </div>
+          <div class="momlabel">Oct'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 30"><div class="momfill created" style="height:86%"></div></div>
+            <div class="momcol" title="Empanelments: 16"><div class="momfill emp" style="height:46%"></div></div>
+          </div>
+          <div class="momlabel">Nov'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 21"><div class="momfill created" style="height:60%"></div></div>
+            <div class="momcol" title="Empanelments: 29"><div class="momfill emp" style="height:83%"></div></div>
+          </div>
+          <div class="momlabel">Dec'25</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 17"><div class="momfill created" style="height:49%"></div></div>
+            <div class="momcol" title="Empanelments: 32"><div class="momfill emp" style="height:91%"></div></div>
+          </div>
+          <div class="momlabel">Jan'26</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 23"><div class="momfill created" style="height:66%"></div></div>
+            <div class="momcol" title="Empanelments: 23"><div class="momfill emp" style="height:66%"></div></div>
+          </div>
+          <div class="momlabel">Feb'26</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 30"><div class="momfill created" style="height:86%"></div></div>
+            <div class="momcol" title="Empanelments: 34"><div class="momfill emp" style="height:97%"></div></div>
+          </div>
+          <div class="momlabel">Mar'26</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 14"><div class="momfill created" style="height:40%"></div></div>
+            <div class="momcol" title="Empanelments: 27"><div class="momfill emp" style="height:77%"></div></div>
+          </div>
+          <div class="momlabel">Apr'26</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 25"><div class="momfill created" style="height:71%"></div></div>
+            <div class="momcol" title="Empanelments: 20"><div class="momfill emp" style="height:57%"></div></div>
+          </div>
+          <div class="momlabel">May'26</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 12"><div class="momfill created" style="height:34%"></div></div>
+            <div class="momcol" title="Empanelments: 30"><div class="momfill emp" style="height:86%"></div></div>
+          </div>
+          <div class="momlabel">Jun'26</div>
+        </div>
+
+        <div class="mombar">
+          <div class="momcols">
+            <div class="momcol" title="Leads Created: 3"><div class="momfill created" style="height:9%"></div></div>
+            <div class="momcol" title="Empanelments: 26"><div class="momfill emp" style="height:74%"></div></div>
+          </div>
+          <div class="momlabel">Jul'26</div>
+        </div>
+    </div>
+    <p class="note">Latest month (Jul 2026) is partial — data extracted mid-month.</p>
+  </section>
+
+  <section class="card">
+    <span class="eyebrow">ICP</span>
+    <h2>ICP Breakdown</h2>
+    <p class="sub">Sorted most → least, with top Lead Source per segment</p>
+    <table>
+      <tr><th>ICP</th><th>Count</th><th>% of Total</th><th>Top Lead Source</th></tr>
+      <tr><td>Corporate/Non-IT Working Professionals</td><td class="num">72</td><td class="num">22.9%</td><td>Meta Ads (36)</td></tr><tr><td>Business</td><td class="num">54</td><td class="num">17.2%</td><td>Meta Ads (26)</td></tr><tr><td>Insurance agents/ Bank Employees/ Wealth Managers</td><td class="num">47</td><td class="num">15.0%</td><td>Meta Ads (25)</td></tr><tr><td>IT Professionals</td><td class="num">33</td><td class="num">10.5%</td><td>Web Form (16)</td></tr><tr><td>Others</td><td class="num">32</td><td class="num">10.2%</td><td>Meta Ads (16)</td></tr><tr><td>Finance professionals/Non-practicing Chartered Accountants</td><td class="num">30</td><td class="num">9.6%</td><td>Web Form (13)</td></tr><tr><td>Students</td><td class="num">12</td><td class="num">3.8%</td><td>Web Form (7)</td></tr><tr><td>Teachers, Lecturers, and Professors</td><td class="num">12</td><td class="num">3.8%</td><td>Meta Ads (5)</td></tr><tr><td>Demat Holders</td><td class="num">7</td><td class="num">2.2%</td><td>Meta Ads (4)</td></tr><tr><td>Ex-Government</td><td class="num">7</td><td class="num">2.2%</td><td>Web Form (4)</td></tr><tr><td>Homemakers</td><td class="num">6</td><td class="num">1.9%</td><td>Meta Ads (3)</td></tr><tr><td>Real Estate</td><td class="num">2</td><td class="num">0.6%</td><td>Meta Ads (1)</td></tr>
+    </table>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <span class="eyebrow">Training</span>
+      <h2>Training Mode</h2>
+      <p class="sub">Sorted most → least</p>
+      
+        <div class="barrow">
+          <div class="barlabel">Self Study Pipeline</div>
+          <div class="bartrack"><div class="barfill" style="width:100.0%;background:#FF5A1F"></div></div>
+          <div class="barval">136 (43.3%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Guided Training Pipeline</div>
+          <div class="bartrack"><div class="barfill" style="width:90.4%;background:#FF5A1F"></div></div>
+          <div class="barval">123 (39.2%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Offline Training Pipeline</div>
+          <div class="bartrack"><div class="barfill" style="width:40.4%;background:#FF5A1F"></div></div>
+          <div class="barval">55 (17.5%)</div>
+        </div>
+    </section>
+    <section class="card">
+      <span class="eyebrow">Acquisition</span>
+      <h2>Lead Channel</h2>
+      <p class="sub">Paid/marketing-driven vs. organic acquisition</p>
+      <div class="donutwrap"><div><svg width="160" height="160" viewBox="0 0 160 160"><circle cx="80.0" cy="80.0" r="69.0" fill="none" stroke="#FF5A1F" stroke-width="20" stroke-dasharray="223.67 209.87" stroke-dashoffset="0.00" transform="rotate(-90 80.0 80.0)" stroke-linecap="butt"/><circle cx="80.0" cy="80.0" r="69.0" fill="none" stroke="#5B8CFF" stroke-width="20" stroke-dasharray="209.87 223.67" stroke-dashoffset="-223.67" transform="rotate(-90 80.0 80.0)" stroke-linecap="butt"/><text x="80.0" y="76.0" text-anchor="middle" font-size="22" font-weight="800" fill="#F3F3F4">314</text><text x="80.0" y="96.0" text-anchor="middle" font-size="10.5" fill="#9C9CA6">records</text></svg></div><div class="legend"><div class="legit"><span class="dot" style="background:#FF5A1F"></span>APA Marketing — 162 (51.6%)</div><div class="legit"><span class="dot" style="background:#5B8CFF"></span>Organic APA — 152 (48.4%)</div></div></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <span class="eyebrow">Combinations</span>
+    <h2>ICP × Training Mode — Top 10</h2>
+    <p class="sub">Out of 34 observed combinations, sorted most → least</p>
+    <table>
+      <tr><th>ICP</th><th>Training Mode</th><th>Count</th><th>% of Total</th></tr>
+      <tr><td>Corporate/Non-IT Working Professionals</td><td>Guided Training Pipeline</td><td class="num">33</td><td class="num">10.5%</td></tr><tr><td>Business</td><td>Self Study Pipeline</td><td class="num">26</td><td class="num">8.3%</td></tr><tr><td>Corporate/Non-IT Working Professionals</td><td>Self Study Pipeline</td><td class="num">24</td><td class="num">7.6%</td></tr><tr><td>Insurance agents/ Bank Employees/ Wealth Managers</td><td>Self Study Pipeline</td><td class="num">21</td><td class="num">6.7%</td></tr><tr><td>Insurance agents/ Bank Employees/ Wealth Managers</td><td>Guided Training Pipeline</td><td class="num">20</td><td class="num">6.4%</td></tr><tr><td>IT Professionals</td><td>Self Study Pipeline</td><td class="num">20</td><td class="num">6.4%</td></tr><tr><td>Business</td><td>Guided Training Pipeline</td><td class="num">17</td><td class="num">5.4%</td></tr><tr><td>Others</td><td>Self Study Pipeline</td><td class="num">16</td><td class="num">5.1%</td></tr><tr><td>Corporate/Non-IT Working Professionals</td><td>Offline Training Pipeline</td><td class="num">15</td><td class="num">4.8%</td></tr><tr><td>Finance professionals/Non-practicing Chartered Accountants</td><td>Guided Training Pipeline</td><td class="num">14</td><td class="num">4.5%</td></tr>
+    </table>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <span class="eyebrow">Profile</span>
+      <h2>Educational Qualification</h2>
+      <p class="sub">8 records blank/unspecified</p>
+      
+        <div class="barrow">
+          <div class="barlabel">Bachelors</div>
+          <div class="bartrack"><div class="barfill" style="width:100.0%;background:#2FD1B3"></div></div>
+          <div class="barval">151 (48.1%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Masters</div>
+          <div class="bartrack"><div class="barfill" style="width:76.2%;background:#2FD1B3"></div></div>
+          <div class="barval">115 (36.6%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">10+2</div>
+          <div class="bartrack"><div class="barfill" style="width:13.2%;background:#2FD1B3"></div></div>
+          <div class="barval">20 (6.4%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Diploma</div>
+          <div class="bartrack"><div class="barfill" style="width:10.6%;background:#2FD1B3"></div></div>
+          <div class="barval">16 (5.1%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Others</div>
+          <div class="bartrack"><div class="barfill" style="width:2.6%;background:#2FD1B3"></div></div>
+          <div class="barval">4 (1.3%)</div>
+        </div>
+    </section>
+    <section class="card">
+      <span class="eyebrow">Profile</span>
+      <h2>Education Stream</h2>
+      <p class="sub">24 records blank/unspecified · top 8 shown</p>
+      
+        <div class="barrow">
+          <div class="barlabel">Commerce &amp; Finance</div>
+          <div class="bartrack"><div class="barfill" style="width:100.0%;background:#2FD1B3"></div></div>
+          <div class="barval">101 (32.2%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Engineering &amp; Technology</div>
+          <div class="bartrack"><div class="barfill" style="width:72.3%;background:#2FD1B3"></div></div>
+          <div class="barval">73 (23.2%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Management &amp; Business Administration</div>
+          <div class="bartrack"><div class="barfill" style="width:50.5%;background:#2FD1B3"></div></div>
+          <div class="barval">51 (16.2%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Arts &amp; Humanities</div>
+          <div class="bartrack"><div class="barfill" style="width:23.8%;background:#2FD1B3"></div></div>
+          <div class="barval">24 (7.6%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Science</div>
+          <div class="bartrack"><div class="barfill" style="width:19.8%;background:#2FD1B3"></div></div>
+          <div class="barval">20 (6.4%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Other (Please Specify)</div>
+          <div class="bartrack"><div class="barfill" style="width:5.9%;background:#2FD1B3"></div></div>
+          <div class="barval">6 (1.9%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Education &amp; Teaching</div>
+          <div class="bartrack"><div class="barfill" style="width:3.0%;background:#2FD1B3"></div></div>
+          <div class="barval">3 (1.0%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Pharmacy</div>
+          <div class="bartrack"><div class="barfill" style="width:2.0%;background:#2FD1B3"></div></div>
+          <div class="barval">2 (0.6%)</div>
+        </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <span class="eyebrow">Geography</span>
+    <h2>Indian State</h2>
+    <p class="sub">24 records blank/unspecified · top 10 of 23 states shown</p>
+    
+        <div class="barrow">
+          <div class="barlabel">Maharashtra</div>
+          <div class="bartrack"><div class="barfill" style="width:100.0%;background:#B084F5"></div></div>
+          <div class="barval">92 (29.3%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Tamil Nadu</div>
+          <div class="bartrack"><div class="barfill" style="width:32.6%;background:#B084F5"></div></div>
+          <div class="barval">30 (9.6%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Karnataka</div>
+          <div class="bartrack"><div class="barfill" style="width:28.3%;background:#B084F5"></div></div>
+          <div class="barval">26 (8.3%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Telangana</div>
+          <div class="bartrack"><div class="barfill" style="width:19.6%;background:#B084F5"></div></div>
+          <div class="barval">18 (5.7%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Rajasthan</div>
+          <div class="bartrack"><div class="barfill" style="width:18.5%;background:#B084F5"></div></div>
+          <div class="barval">17 (5.4%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">West Bengal</div>
+          <div class="bartrack"><div class="barfill" style="width:18.5%;background:#B084F5"></div></div>
+          <div class="barval">17 (5.4%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Gujarat</div>
+          <div class="bartrack"><div class="barfill" style="width:17.4%;background:#B084F5"></div></div>
+          <div class="barval">16 (5.1%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Delhi</div>
+          <div class="bartrack"><div class="barfill" style="width:12.0%;background:#B084F5"></div></div>
+          <div class="barval">11 (3.5%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Uttar Pradesh</div>
+          <div class="bartrack"><div class="barfill" style="width:9.8%;background:#B084F5"></div></div>
+          <div class="barval">9 (2.9%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Haryana</div>
+          <div class="bartrack"><div class="barfill" style="width:8.7%;background:#B084F5"></div></div>
+          <div class="barval">8 (2.5%)</div>
+        </div>
+    <p class="note">Maharashtra alone accounts for 92 records (29.3% of total).</p>
+  </section>
+
+  <section class="card">
+    <span class="eyebrow">Attribution</span>
+    <h2>Lead Source &amp; UTM Coverage</h2>
+    <p class="sub">Lead Source has 100% coverage. UTM tags are only present where a tracked link was used.</p>
+    <div class="grid2">
+      <div>
+        <h3 style="font-size:12.5px;color:var(--sub);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">Lead Source (full)</h3>
+        
+        <div class="barrow">
+          <div class="barlabel">Meta Ads</div>
+          <div class="bartrack"><div class="barfill" style="width:100.0%;background:#FF5A1F"></div></div>
+          <div class="barval">143 (45.5%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Web Form</div>
+          <div class="bartrack"><div class="barfill" style="width:84.6%;background:#FF5A1F"></div></div>
+          <div class="barval">121 (38.5%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Trainer Central</div>
+          <div class="bartrack"><div class="barfill" style="width:15.4%;background:#FF5A1F"></div></div>
+          <div class="barval">22 (7.0%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Webinar</div>
+          <div class="bartrack"><div class="barfill" style="width:10.5%;background:#FF5A1F"></div></div>
+          <div class="barval">15 (4.8%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Organic</div>
+          <div class="bartrack"><div class="barfill" style="width:5.6%;background:#FF5A1F"></div></div>
+          <div class="barval">8 (2.5%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Outbound MA</div>
+          <div class="bartrack"><div class="barfill" style="width:2.8%;background:#FF5A1F"></div></div>
+          <div class="barval">4 (1.3%)</div>
+        </div>
+
+        <div class="barrow">
+          <div class="barlabel">Newsletter subscription</div>
+          <div class="bartrack"><div class="barfill" style="width:0.7%;background:#FF5A1F"></div></div>
+          <div class="barval">1 (0.3%)</div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:12.5px;color:var(--sub);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">UTM Coverage</h3>
+        <table>
+          <tr><th>Field</th><th>Populated</th><th>Coverage</th></tr>
+          <tr><td>utm_source</td><td class="num">116/314</td><td class="num">37%</td></tr>
+          <tr><td>utm_medium</td><td class="num">96/314</td><td class="num">31%</td></tr>
+          <tr><td>utm_campaign</td><td class="num">88/314</td><td class="num">28%</td></tr>
+          <tr><td>Campaign Name</td><td class="num">147/314</td><td class="num">47%</td></tr>
+        </table>
+        <p class="note">Full breakdown by value is in the companion Excel workbook (Lead Source &amp; UTM tab).</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer">Generated 14 Aug 2026 · Static snapshot from Zoho CRM export · Visual style approximated from <a href="https://hargharmfd.com" target="_blank" rel="noopener">hargharmfd.com</a> — share exact brand colors/fonts to fine-tune. Full editable breakdown (with live formulas) is in the companion Excel workbook.</p>
+</div>
+</body>
+</html>
